@@ -23,8 +23,8 @@ def list_models():
         models = genai.list_models()
         # Only include models that support generateContent
         model_names = [
-            str(m.name) for m in models 
-            if hasattr(m, "supported_generation_methods") 
+            str(m.name) for m in models
+            if hasattr(m, "supported_generation_methods")
             and "generateContent" in m.supported_generation_methods
         ]
         return {"available_models": model_names}
@@ -37,6 +37,12 @@ async def analyze_ingredients(file: UploadFile = File(...)):
     try:
         # Read uploaded image
         contents = await file.read()
+
+        # Check MIME type, fallback if invalid
+        mime_type = file.content_type
+        if mime_type is None or mime_type == "application/octet-stream":
+            mime_type = "image/jpeg"  # Default fallback
+        print("📸 Received MIME type:", mime_type)
 
         # Use latest flash model
         model = genai.GenerativeModel("models/gemini-flash-latest")
@@ -68,7 +74,7 @@ async def analyze_ingredients(file: UploadFile = File(...)):
 
         # Call Gemini API
         response = model.generate_content(
-            [prompt, {"mime_type": file.content_type, "data": contents}],
+            [prompt, {"mime_type": mime_type, "data": contents}],
             generation_config={"response_mime_type": "application/json"}
         )
 
