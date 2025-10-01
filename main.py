@@ -23,8 +23,8 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         # Read uploaded image
         contents = await file.read()
 
-        # Load Gemini model - use the most reliable model
-        model = genai.GenerativeModel("gemini-1.0-flash")
+        # Load Gemini model (1.5-flash recommended for image recognition)
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
         # Force JSON-only response for specific ingredients
         prompt = """
