@@ -24,7 +24,7 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         contents = await file.read()
 
         # Load Gemini model
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
         # Force JSON-only response for specific ingredients
         prompt = """
