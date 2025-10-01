@@ -23,8 +23,31 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         # Read uploaded image
         contents = await file.read()
 
-        # Load Gemini model
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        # Load Gemini model - try different models in order of preference
+        model_names = [
+            "gemini-1.0-flash",
+            "gemini-pro",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+        ]
+        
+        model = None
+        last_error = None
+        
+        for model_name in model_names:
+            try:
+                model = genai.GenerativeModel(model_name)
+                # Test if model is available by making a simple call
+                test_response = model.generate_content("test")
+                print(f"Successfully using model: {model_name}")
+                break
+            except Exception as e:
+                print(f"Model {model_name} failed: {e}")
+                last_error = e
+                continue
+        
+        if model is None:
+            raise Exception(f"All models failed. Last error: {last_error}")
 
         # Force JSON-only response for specific ingredients
         prompt = """
