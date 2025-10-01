@@ -16,6 +16,16 @@ app = FastAPI()
 def read_root():
     return {"message": "Welcome to the EasyBites Ingredient Scanner API"}
 
+# --- List Available Models ---
+@app.get("/list-models")
+def list_models():
+    try:
+        models = genai.list_models()
+        model_names = [m.name for m in models]
+        return {"available_models": model_names}
+    except Exception as e:
+        return {"error": str(e)}
+
 # --- Ingredient Analysis Route ---
 @app.post("/analyze-ingredients/")
 async def analyze_ingredients(file: UploadFile = File(...)):
@@ -23,7 +33,7 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         # Read uploaded image
         contents = await file.read()
 
-        # Load Gemini model (1.5-flash recommended for image recognition)
+        # Load Gemini model (try gemini-1.5-flash if available)
         model = genai.GenerativeModel("gemini-1.5-flash")
 
         # Force JSON-only response for specific ingredients
