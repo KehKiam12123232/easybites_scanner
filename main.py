@@ -3,13 +3,20 @@ from fastapi.responses import JSONResponse
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import json
 
-# Load API key from environment
+# Load API key from environment (.env for local, Render ENV VAR in production)
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI()
 
+# --- Homepage Route ---
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the EasyBites Ingredient Scanner API"}
+
+# --- Ingredient Analysis Route ---
 @app.post("/analyze-ingredients/")
 async def analyze_ingredients(file: UploadFile = File(...)):
     try:
@@ -19,17 +26,27 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         # Load Gemini model
         model = genai.GenerativeModel("gemini-1.5-flash")
 
-        # Force JSON-only response
+        # Force JSON-only response for specific ingredients
         prompt = """
         You are a food ingredient detection system.
-        Identify all ingredients present in the uploaded image.
+        Identify only the following ingredients in the uploaded image:
+        Chicken meat, Lady's Finger (Okra), Tomato, Potato, Carrots, Eggplant,
+        String Beans (Batong), Onion, Chili Pepper, Vegetable Pear / Chayote (Sayote).
+
         Return the result in pure JSON format only, like this:
         {
-          "ingredients": ["Tomato", "Onion", "Carrot"],
+          "ingredients_detected": ["Tomato", "Onion", "Carrot"],
           "shelf_life_days": {
+              "Chicken meat": 2,
+              "Lady's Finger (Okra)": 5,
               "Tomato": 5,
+              "Potato": 30,
+              "Carrots": 14,
+              "Eggplant": 7,
+              "String Beans (Batong)": 5,
               "Onion": 30,
-              "Carrot": 14
+              "Chili Pepper": 14,
+              "Vegetable Pear / Chayote (Sayote)": 10
           }
         }
         """
@@ -40,7 +57,8 @@ async def analyze_ingredients(file: UploadFile = File(...)):
             generation_config={"response_mime_type": "application/json"}
         )
 
-        return JSONResponse(content=response.text)
+        # Parse Gemini response safely
+        return JSONResponse(content=json.loads(response.text))
 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
