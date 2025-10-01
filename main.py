@@ -21,8 +21,12 @@ def read_root():
 def list_models():
     try:
         models = genai.list_models()
-        # Some models may not be usable for generateContent (e.g. embedding-only models)
-        model_names = [str(m.name) for m in models if "generateContent" in m.supported_generation_methods]
+        # Only include models that support generateContent
+        model_names = [
+            str(m.name) for m in models 
+            if hasattr(m, "supported_generation_methods") 
+            and "generateContent" in m.supported_generation_methods
+        ]
         return {"available_models": model_names}
     except Exception as e:
         return {"error": str(e)}
@@ -34,8 +38,8 @@ async def analyze_ingredients(file: UploadFile = File(...)):
         # Read uploaded image
         contents = await file.read()
 
-        # Load Gemini model (try gemini-1.5-flash if available)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        # Use latest flash model
+        model = genai.GenerativeModel("models/gemini-flash-latest")
 
         # Force JSON-only response for specific ingredients
         prompt = """
