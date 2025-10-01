@@ -21,7 +21,8 @@ def read_root():
 def list_models():
     try:
         models = genai.list_models()
-        model_names = [m.name for m in models]
+        # Some models may not be usable for generateContent (e.g. embedding-only models)
+        model_names = [str(m.name) for m in models if "generateContent" in m.supported_generation_methods]
         return {"available_models": model_names}
     except Exception as e:
         return {"error": str(e)}
